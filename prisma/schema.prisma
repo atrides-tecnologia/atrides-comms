@@ -1,0 +1,100 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Organization {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name      String
+  slug      String   @unique
+  color     String   @default("#0066FF")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  phoneNumbers PhoneNumber[]
+
+  @@map("organizations")
+}
+
+model PhoneNumber {
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId    String   @map("organization_id") @db.Uuid
+  label             String
+  phoneNumber       String   @map("phone_number")
+  phoneNumberId     String   @map("phone_number_id")
+  wabaId            String   @map("waba_id")
+  accessToken       String   @map("access_token")
+  webhookVerifyToken String  @map("webhook_verify_token")
+  isActive          Boolean  @default(true) @map("is_active")
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  organization     Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  conversations    Conversation[]
+  messageTemplates MessageTemplate[]
+
+  @@index([organizationId], map: "idx_phone_numbers_org")
+  @@index([phoneNumberId], map: "idx_phone_numbers_meta_id")
+  @@map("phone_numbers")
+}
+
+model Conversation {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  phoneNumberId    String   @map("phone_number_id") @db.Uuid
+  contactPhone     String   @map("contact_phone")
+  contactName      String?  @map("contact_name")
+  contactAvatarUrl String?  @map("contact_avatar_url")
+  lastMessageAt    DateTime @default(now()) @map("last_message_at") @db.Timestamptz
+  lastMessagePreview String? @map("last_message_preview")
+  unreadCount      Int      @default(0) @map("unread_count")
+  status           String   @default("active")
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt        DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  phoneNumber PhoneNumber @relation(fields: [phoneNumberId], references: [id], onDelete: Cascade)
+  messages    Message[]
+
+  @@unique([phoneNumberId, contactPhone])
+  @@index([phoneNumberId], map: "idx_conversations_phone_number_id")
+  @@index([lastMessageAt(sort: Desc)], map: "idx_conversations_last_message")
+  @@map("conversations")
+}
+
+model Message {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  conversationId String   @map("conversation_id") @db.Uuid
+  wamid          String?
+  direction      String
+  type           String   @default("text")
+  content        Json
+  status         String   @default("sent")
+  timestamp      DateTime @default(now()) @db.Timestamptz
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId], map: "idx_messages_conversation_id")
+  @@index([timestamp(sort: Desc)], map: "idx_messages_timestamp")
+  @@map("messages")
+}
+
+model MessageTemplate {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  phoneNumberId String   @map("phone_number_id") @db.Uuid
+  templateName  String   @map("template_name")
+  language      String   @default("pt_BR")
+  category      String?
+  status        String   @default("approved")
+  components    Json?
+  syncedAt      DateTime @default(now()) @map("synced_at") @db.Timestamptz
+
+  phoneNumber PhoneNumber @relation(fields: [phoneNumberId], references: [id], onDelete: Cascade)
+
+  @@unique([phoneNumberId, templateName, language])
+  @@map("message_templates")
+}

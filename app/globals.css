@@ -1,0 +1,78 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
+@import "tailwindcss";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+  --color-background: #ffffff;
+  --color-foreground: #1a1d21;
+  --color-muted: #f7f8fa;
+  --color-muted-foreground: #616774;
+  --color-border: #e1e4e8;
+  --color-accent: #0066ff;
+  --color-accent-foreground: #ffffff;
+  --color-destructive: #ff3b30;
+  --color-success: #34c759;
+  --color-hover: #f0f2f5;
+  --color-bubble-outbound: #0066ff;
+  --color-bubble-outbound-text: #ffffff;
+  --color-bubble-inbound: #f0f2f5;
+  --color-bubble-inbound-text: #1a1d21;
+  --color-sidebar: #f7f8fa;
+  --color-panel: #f7f8fa;
+  --color-unread: #ff3b30;
+  --color-input: #ffffff;
+  --color-ring: #0066ff;
+
+  --font-heading: 'DM Sans', sans-serif;
+  --font-body: 'IBM Plex Sans', sans-serif;
+}
+
+.dark {
+  --color-background: #1a1d21;
+  --color-foreground: #e8eaed;
+  --color-muted: #1e2126;
+  --color-muted-foreground: #8b8f96;
+  --color-border: #2d3139;
+  --color-accent: #4d94ff;
+  --color-accent-foreground: #ffffff;
+  --color-hover: #2d3139;
+  --color-bubble-outbound: #4d94ff;
+  --color-bubble-outbound-text: #ffffff;
+  --color-bubble-inbound: #2d3139;
+  --color-bubble-inbound-text: #e8eaed;
+  --color-sidebar: #121417;
+  --color-panel: #1e2126;
+  --color-input: #1e2126;
+  --color-ring: #4d94ff;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+}
+
+.message-enter {
+  animation: messageIn 200ms ease-out;
+}
+
+@keyframes messageIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
