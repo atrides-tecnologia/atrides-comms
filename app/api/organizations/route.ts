@@ -44,8 +44,7 @@ export async function GET() {
     return NextResponse.json(result)
   } catch (error) {
     console.error('Get organizations error:', error)
-    const message = error instanceof Error ? error.message : 'Unknown error'
-    return NextResponse.json({ error: 'Failed to fetch organizations', detail: message }, { status: 500 })
+    return NextResponse.json({ error: 'Failed to fetch organizations' }, { status: 500 })
   }
 }
 

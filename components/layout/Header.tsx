@@ -1,13 +1,22 @@
 'use client'
 
-import { Search, Menu } from 'lucide-react'
+import { Search, Menu, LogOut } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ThemeToggle } from './ThemeToggle'
 import { useUIStore } from '@/stores/uiStore'
+import { supabase } from '@/lib/supabase/client'
 
 export function Header() {
   const toggleSidebar = useUIStore((s) => s.toggleSidebar)
+  const router = useRouter()
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    router.push('/login')
+    router.refresh()
+  }
 
   return (
     <header className="flex h-14 items-center justify-between border-b border-border bg-background px-4">
@@ -34,6 +43,15 @@ export function Header() {
           />
         </div>
         <ThemeToggle />
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8"
+          onClick={handleLogout}
+          title="Sair"
+        >
+          <LogOut className="h-4 w-4" />
+        </Button>
       </div>
     </header>
   )
