@@ -7,6 +7,11 @@ interface ChatState {
   conversations: Conversation[]
   messages: Message[]
 
+  // Loading states
+  loadingOrganizations: boolean
+  loadingConversations: boolean
+  loadingMessages: boolean
+
   // Selection
   selectedPhoneNumberId: string | null
   selectedConversationId: string | null
@@ -15,24 +20,34 @@ interface ChatState {
   setOrganizations: (orgs: Organization[]) => void
   setConversations: (convs: Conversation[]) => void
   setMessages: (msgs: Message[]) => void
+  setLoadingOrganizations: (loading: boolean) => void
+  setLoadingConversations: (loading: boolean) => void
+  setLoadingMessages: (loading: boolean) => void
   selectPhoneNumber: (id: string | null) => void
   selectConversation: (id: string | null) => void
   addMessage: (msg: Message) => void
   updateMessage: (id: string, updates: Partial<Message>) => void
   updateConversation: (id: string, updates: Partial<Conversation>) => void
   updateMessageByWamid: (wamid: string, updates: Partial<Message>) => void
+  removeConversation: (id: string) => void
 }
 
 export const useChatStore = create<ChatState>((set) => ({
   organizations: [],
   conversations: [],
   messages: [],
+  loadingOrganizations: false,
+  loadingConversations: false,
+  loadingMessages: false,
   selectedPhoneNumberId: null,
   selectedConversationId: null,
 
   setOrganizations: (organizations) => set({ organizations }),
   setConversations: (conversations) => set({ conversations }),
   setMessages: (messages) => set({ messages }),
+  setLoadingOrganizations: (loadingOrganizations) => set({ loadingOrganizations }),
+  setLoadingConversations: (loadingConversations) => set({ loadingConversations }),
+  setLoadingMessages: (loadingMessages) => set({ loadingMessages }),
 
   selectPhoneNumber: (id) => set({ selectedPhoneNumberId: id, selectedConversationId: null, messages: [] }),
   selectConversation: (id) => set({ selectedConversationId: id }),
@@ -55,5 +70,12 @@ export const useChatStore = create<ChatState>((set) => ({
   updateConversation: (id, updates) =>
     set((state) => ({
       conversations: state.conversations.map((c) => (c.id === id ? { ...c, ...updates } : c)),
+    })),
+
+  removeConversation: (id) =>
+    set((state) => ({
+      conversations: state.conversations.filter((c) => c.id !== id),
+      selectedConversationId: state.selectedConversationId === id ? null : state.selectedConversationId,
+      messages: state.selectedConversationId === id ? [] : state.messages,
     })),
 }))

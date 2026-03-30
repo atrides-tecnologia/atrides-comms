@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
 import { Badge } from '@/components/ui/badge'
+import { SidebarSkeleton } from '@/components/chat/SidebarSkeleton'
+import { EmptyState } from '@/components/chat/EmptyState'
 import { useChatStore } from '@/stores/chatStore'
 import { useUIStore } from '@/stores/uiStore'
 import type { Organization } from '@/types'
@@ -66,9 +68,32 @@ function OrgItem({ org }: { org: Organization }) {
 
 export function Sidebar() {
   const organizations = useChatStore((s) => s.organizations)
+  const loadingOrganizations = useChatStore((s) => s.loadingOrganizations)
   const sidebarOpen = useUIStore((s) => s.sidebarOpen)
   const setNewProjectModalOpen = useUIStore((s) => s.setNewProjectModalOpen)
   const setAddPhoneModalOpen = useUIStore((s) => s.setAddPhoneModalOpen)
+
+  const renderContent = () => {
+    if (loadingOrganizations) {
+      return <SidebarSkeleton />
+    }
+
+    if (organizations.length === 0) {
+      return (
+        <div className="flex-1 flex items-center justify-center p-3">
+          <EmptyState variant="no-org" />
+        </div>
+      )
+    }
+
+    return (
+      <div className="space-y-1">
+        {organizations.map((org) => (
+          <OrgItem key={org.id} org={org} />
+        ))}
+      </div>
+    )
+  }
 
   return (
     <aside
@@ -79,11 +104,7 @@ export function Sidebar() {
       )}
     >
       <ScrollArea className="flex-1 p-3">
-        <div className="space-y-1">
-          {organizations.map((org) => (
-            <OrgItem key={org.id} org={org} />
-          ))}
-        </div>
+        {renderContent()}
       </ScrollArea>
 
       <div className="p-3 space-y-1">
@@ -102,7 +123,7 @@ export function Sidebar() {
           onClick={() => setAddPhoneModalOpen(true)}
         >
           <Phone className="h-3.5 w-3.5" />
-          Adicionar Número
+          Adicionar Numero
         </Button>
         <Button
           variant="ghost"
@@ -111,7 +132,7 @@ export function Sidebar() {
         >
           <a href="/settings">
             <Settings className="h-3.5 w-3.5" />
-            Configurações
+            Configuracoes
           </a>
         </Button>
       </div>
