@@ -1,23 +1,30 @@
 'use client'
 
-import { useEffect, useRef, useMemo, useCallback } from 'react'
-import { Archive, Phone as PhoneIcon } from 'lucide-react'
+import { useEffect, useRef, useMemo, useCallback, useState } from 'react'
+import { Archive, Phone as PhoneIcon, Loader2, ArrowLeft } from 'lucide-react'
 import { isSameDay } from 'date-fns'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { MessageBubble } from './MessageBubble'
 import { MessageInput } from './MessageInput'
 import { DateSeparator } from './DateSeparator'
-import { EmptyChat } from './EmptyChat'
+import { EmptyState } from './EmptyState'
+import { MessagesSkeleton } from './MessagesSkeleton'
 import { useChatStore } from '@/stores/chatStore'
+import { useUIStore } from '@/stores/uiStore'
 import { formatPhoneNumber } from '@/lib/utils'
 
 export function ChatPanel() {
   const selectedConversationId = useChatStore((s) => s.selectedConversationId)
   const conversations = useChatStore((s) => s.conversations)
   const messages = useChatStore((s) => s.messages)
-  const addMessage = useChatStore((s) => s.addMessage)
+  const loadingMessages = useChatStore((s) => s.loadingMessages)
+  const updateConversation = useChatStore((s) => s.updateConversation)
+  const removeConversation = useChatStore((s) => s.removeConversation)
+  const setMobileView = useUIStore((s) => s.setMobileView)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const [sendError, setSendError] = useState<string | null>(null)
+  const [archiving, setArchiving] = useState(false)
 
   const conversation = conversations.find((c) => c.id === selectedConversationId)
 
@@ -25,8 +32,16 @@ export function ChatPanel() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages.length])
 
+  // Clear send error after 5 seconds
+  useEffect(() => {
+    if (!sendError) return
+    const timer = setTimeout(() => setSendError(null), 5000)
+    return () => clearTimeout(timer)
+  }, [sendError])
+
   const handleSend = useCallback(async (text: string) => {
     if (!selectedConversationId) return
+    setSendError(null)
 
     try {
       const res = await fetch('/api/messages/send', {
@@ -37,12 +52,35 @@ export function ChatPanel() {
 
       if (!res.ok) {
         const err = await res.json()
-        console.error('Failed to send:', err)
+        setSendError(err.error || 'Falha ao enviar mensagem')
       }
-    } catch (err) {
-      console.error('Failed to send message:', err)
+    } catch {
+      setSendError('Erro de conexao. Verifique sua internet.')
     }
   }, [selectedConversationId])
+
+  const handleArchive = useCallback(async () => {
+    if (!selectedConversationId || archiving) return
+    setArchiving(true)
+
+    try {
+      const res = await fetch(`/api/conversations/${selectedConversationId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'archived' }),
+      })
+
+      if (res.ok) {
+        // If current filter is 'all', the archived conversation should disappear
+        // Remove it from the list and deselect
+        removeConversation(selectedConversationId)
+      }
+    } catch {
+      // Silently fail — the conversation remains in the list
+    } finally {
+      setArchiving(false)
+    }
+  }, [selectedConversationId, archiving, removeConversation])
 
   const groupedMessages = useMemo(() => {
     const groups: { date: Date; messages: typeof messages }[] = []
@@ -64,7 +102,7 @@ export function ChatPanel() {
   if (!selectedConversationId || !conversation) {
     return (
       <div className="flex-1">
-        <EmptyChat />
+        <EmptyState variant="no-conversation-selected" />
       </div>
     )
   }
@@ -75,40 +113,74 @@ export function ChatPanel() {
     <div className="flex flex-1 flex-col">
       {/* Chat Header */}
       <div className="flex h-14 items-center justify-between border-b border-border px-4">
-        <div>
-          <h2 className="text-sm font-semibold font-[family-name:var(--font-heading)]">{displayName}</h2>
-          <p className="text-[11px] text-muted-foreground flex items-center gap-1">
-            <PhoneIcon className="h-3 w-3" />
-            {formatPhoneNumber(conversation.contactPhone)}
-          </p>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 md:hidden"
+            onClick={() => setMobileView('conversations')}
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <div>
+            <h2 className="text-sm font-semibold font-[family-name:var(--font-heading)]">{displayName}</h2>
+            <p className="text-[11px] text-muted-foreground flex items-center gap-1">
+              <PhoneIcon className="h-3 w-3" />
+              {formatPhoneNumber(conversation.contactPhone)}
+            </p>
+          </div>
         </div>
-        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
-          <Archive className="h-4 w-4" />
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 text-muted-foreground"
+          onClick={handleArchive}
+          disabled={archiving}
+          title="Arquivar conversa"
+        >
+          {archiving ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Archive className="h-4 w-4" />
+          )}
         </Button>
       </div>
 
       {/* Messages Area */}
       <ScrollArea className="flex-1">
         <div className="px-4 py-2">
-          {groupedMessages.map((group, gi) => (
-            <div key={gi}>
-              <DateSeparator date={group.date} />
-              {group.messages.map((msg, mi) => {
-                const prev = mi > 0 ? group.messages[mi - 1] : null
-                const isSameSender = prev?.direction === msg.direction
-                return (
-                  <MessageBubble
-                    key={msg.id}
-                    message={msg}
-                    isSameSenderAsPrevious={isSameSender}
-                  />
-                )
-              })}
-            </div>
-          ))}
-          <div ref={messagesEndRef} />
+          {loadingMessages ? (
+            <MessagesSkeleton />
+          ) : (
+            <>
+              {groupedMessages.map((group, gi) => (
+                <div key={gi}>
+                  <DateSeparator date={group.date} />
+                  {group.messages.map((msg, mi) => {
+                    const prev = mi > 0 ? group.messages[mi - 1] : null
+                    const isSameSender = prev?.direction === msg.direction
+                    return (
+                      <MessageBubble
+                        key={msg.id}
+                        message={msg}
+                        isSameSenderAsPrevious={isSameSender}
+                      />
+                    )
+                  })}
+                </div>
+              ))}
+              <div ref={messagesEndRef} />
+            </>
+          )}
         </div>
       </ScrollArea>
+
+      {/* Send Error */}
+      {sendError && (
+        <div className="px-4 py-2 bg-destructive/10 border-t border-destructive/20">
+          <p className="text-xs text-destructive">{sendError}</p>
+        </div>
+      )}
 
       {/* Input */}
       <MessageInput onSend={handleSend} />

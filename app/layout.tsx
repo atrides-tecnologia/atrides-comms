@@ -5,6 +5,9 @@ import './globals.css'
 export const metadata: Metadata = {
   title: 'Atrides Comms',
   description: 'Hub centralizado de comunicação WhatsApp',
+  icons: {
+    icon: '/favicon.svg',
+  },
 }
 
 export default function RootLayout({

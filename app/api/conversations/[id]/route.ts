@@ -32,3 +32,36 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
     return NextResponse.json({ error: 'Failed to fetch conversation' }, { status: 500 })
   }
 }
+
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const { id } = await params
+    const body = await request.json()
+
+    const allowedFields: Record<string, boolean> = {
+      status: true,
+      contactName: true,
+    }
+
+    const data: Record<string, unknown> = {}
+    for (const key of Object.keys(body)) {
+      if (allowedFields[key]) {
+        data[key] = body[key]
+      }
+    }
+
+    if (Object.keys(data).length === 0) {
+      return NextResponse.json({ error: 'No valid fields to update' }, { status: 400 })
+    }
+
+    const conversation = await prisma.conversation.update({
+      where: { id },
+      data,
+    })
+
+    return NextResponse.json(conversation)
+  } catch (error) {
+    console.error('Update conversation error:', error)
+    return NextResponse.json({ error: 'Failed to update conversation' }, { status: 500 })
+  }
+}

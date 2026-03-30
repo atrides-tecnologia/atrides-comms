@@ -1,9 +1,8 @@
 'use client'
 
-import { Search, Menu, LogOut } from 'lucide-react'
+import { Menu, LogOut } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { ThemeToggle } from './ThemeToggle'
 import { useUIStore } from '@/stores/uiStore'
 import { supabase } from '@/lib/supabase/client'
@@ -35,13 +34,6 @@ export function Header() {
       </div>
 
       <div className="flex items-center gap-2">
-        <div className="relative hidden sm:block">
-          <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Buscar..."
-            className="h-8 w-56 pl-8 text-xs"
-          />
-        </div>
         <ThemeToggle />
         <Button
           variant="ghost"
