@@ -4,7 +4,9 @@ import { createSupabaseMiddlewareClient } from '@/lib/supabase/middleware'
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const code = searchParams.get('code')
-  const next = searchParams.get('next') ?? '/chat'
+  const nextParam = searchParams.get('next') ?? '/chat'
+  // Prevent open redirect — only allow relative paths on same origin
+  const next = nextParam.startsWith('/') && !nextParam.startsWith('//') ? nextParam : '/chat'
 
   if (code) {
     const { supabase, response } = createSupabaseMiddlewareClient(request)

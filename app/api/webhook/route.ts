@@ -46,7 +46,12 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  const body = JSON.parse(rawBody) as WebhookPayload
+  let body: WebhookPayload
+  try {
+    body = JSON.parse(rawBody) as WebhookPayload
+  } catch {
+    return new NextResponse('Invalid JSON', { status: 400 })
+  }
 
   if (body.object !== 'whatsapp_business_account') {
     return NextResponse.json({ error: 'Invalid object' }, { status: 400 })
