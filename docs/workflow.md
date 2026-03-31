@@ -20,9 +20,9 @@ flowchart TD
     end
 
     BACKLOG -->|"@agent-pm inicia US"| DEV
-    DEV -->|"PR aberto + build OK"| REVIEW
-    REVIEW -->|"@agent-code-review aprova"| TEST
-    TEST -->|"@agent-qa aprova"| DONE
+    DEV -->|"Codigo pronto"| TEST
+    TEST -->|"@agent-qa aprova"| REVIEW
+    REVIEW -->|"PR mergeado"| DONE
     DONE -->|"CI/CD"| DEPLOYED
 
     REVIEW -->|"Changes requested"| DEV
@@ -50,11 +50,11 @@ flowchart TD
 | Status | Descrição | Critério de Entrada | Critério de Saída |
 |--------|-----------|--------------------|--------------------|
 | `backlog` | Não iniciado | US criada pelo PM | Desenvolvedor inicia trabalho |
-| `in development` | Desenvolvimento ativo | US priorizada | Código pronto, testes locais passando |
-| `in review` | Aguardando revisão | PR aberto, build passando | Code Review aprovado |
-| `in test` | Em testes/QA | Revisão aprovada | Todos os critérios de aceite validados |
+| `in development` | Desenvolvimento ativo | US priorizada | Código pronto para testes |
+| `in test` | Em testes/QA | Código pronto | QA aprova todos os critérios de aceite |
+| `in review` | Aguardando review/merge | Testes aprovados, PR aberto | PR mergeado na main |
 | `blocked` | Bloqueado | Dependência externa identificada | Dependência resolvida |
-| `done` | Concluído | Testes aprovados | Merge na main |
+| `done` | Concluído | PR mergeado | N/A |
 | `deployed` | Em produção | CI/CD executado | N/A |
 | `cancelled` | Cancelado | Escopo removido | N/A |
 
@@ -126,7 +126,8 @@ flowchart TD
 - Screenshots em múltiplos viewports (desktop 1400x900, mobile 375x812)
 - Upload de evidências no ClickUp
 - Relatório estruturado de resultados (pass/fail por critério)
-- Mover tasks para `done` (aprovado) ou manter em `in test` (reprovado)
+- Se aprovado: mover task para `in review` (pronto para PR)
+- Se reprovado: mover task para `in development` (volta para correção)
 
 ## Ciclo de Vida de uma US
 
@@ -138,31 +139,38 @@ flowchart TD
    ```
    - PM analisa codebase, cria US + subtasks no ClickUp
    - Define waves de execução (parallelizáveis vs sequenciais)
+   - Status: `backlog`
 
 2. **Desenvolvimento** — Usuário (ou Claude) implementa as subtasks
    - PM move US para `in development`
    - Subtasks da Wave 1 vão para `in development`
    - Ao concluir cada subtask, mover para `done`
+   - Status: `in development`
 
-3. **Code Review** — Implementação completa
-   ```
-   @agent-code-review revise a US0000009
-   ```
-   - Valida cada critério de aceite contra o código
-   - Comenta resultados no ClickUp
-   - Move para `in review` se aprovado
-
-4. **Testes** — Review aprovado
+3. **Testes (QA)** — Código pronto
    ```
    @agent-qa teste a US0000009
    ```
    - Executa testes visuais (desktop, mobile, dark, light)
    - Captura screenshots como evidência
    - Anexa evidências no ClickUp
-   - Move para `done` se todos os critérios passam
+   - Se aprovado: move para `in review`
+   - Se bugs encontrados: **volta para `in development`**, reporta os bugs, desenvolvedor corrige, e QA re-testa
+   - **Nunca abrir PR com testes falhando**
+   - Status: `in test` → `in review` (ou volta para `in development`)
 
-5. **Merge & Deploy** — Testes aprovados
-   - PR mergeado na main
+4. **Code Review & PR** — Testes aprovados
+   ```
+   @agent-code-review revise a US0000009
+   ```
+   - Abre PR na branch
+   - Valida cada critério de aceite contra o código
+   - Comenta resultados no ClickUp
+   - Se aprovado: merge e move para `done`
+   - Se changes requested: volta para `in development`
+   - Status: `in review` → `done`
+
+5. **Deploy** — PR mergeado
    - CI/CD faz deploy (quando configurado)
    - Task vai para `deployed`
 
