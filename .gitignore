@@ -54,6 +54,7 @@ prisma/*.db-journal
 # prints
 prints/
 README-workflow.md
+docs/references/
 
 # claude code
 .claude/
