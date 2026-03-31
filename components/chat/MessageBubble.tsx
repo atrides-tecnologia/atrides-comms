@@ -1,18 +1,22 @@
 'use client'
 
 import { format } from 'date-fns'
-import { cn } from '@/lib/utils'
+import { cn, getInitials, stringToColor } from '@/lib/utils'
 import { MessageStatus } from './MessageStatus'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import type { Message } from '@/types'
 
 interface MessageBubbleProps {
   message: Message
   isSameSenderAsPrevious: boolean
+  contactName?: string
+  contactPhone?: string
 }
 
-export function MessageBubble({ message, isSameSenderAsPrevious }: MessageBubbleProps) {
+export function MessageBubble({ message, isSameSenderAsPrevious, contactName, contactPhone }: MessageBubbleProps) {
   const isOutbound = message.direction === 'outbound'
   const time = format(new Date(message.timestamp), 'HH:mm')
+  const showAvatar = !isOutbound && !isSameSenderAsPrevious
 
   const renderContent = () => {
     switch (message.type) {
@@ -66,18 +70,43 @@ export function MessageBubble({ message, isSameSenderAsPrevious }: MessageBubble
         isSameSenderAsPrevious ? 'mt-1' : 'mt-3'
       )}
     >
-      <div
-        className={cn(
-          'max-w-[65%] px-3 py-2',
-          isOutbound
-            ? 'bg-bubble-outbound text-bubble-outbound-text rounded-[16px_16px_4px_16px]'
-            : 'bg-bubble-inbound text-bubble-inbound-text rounded-[16px_16px_16px_4px]'
+      {/* Inbound avatar */}
+      {!isOutbound && (
+        <div className="w-8 mr-2 shrink-0 flex items-end">
+          {showAvatar && (
+            <Avatar className="h-7 w-7">
+              <AvatarFallback
+                style={{ backgroundColor: stringToColor(contactPhone || ''), color: 'white' }}
+                className="text-[10px] font-medium"
+              >
+                {getInitials(contactName || '#')}
+              </AvatarFallback>
+            </Avatar>
+          )}
+        </div>
+      )}
+
+      <div className="max-w-[65%]">
+        {/* Sender name for first inbound in sequence */}
+        {showAvatar && contactName && (
+          <p className="text-[11px] text-muted-foreground font-medium mb-1 ml-1">
+            {contactName}
+          </p>
         )}
-      >
-        {renderContent()}
-        <div className={cn('flex items-center justify-end gap-1 mt-0.5', isOutbound ? 'text-white/70' : 'text-muted-foreground')}>
-          <span className="text-[11px]">{time}</span>
-          {isOutbound && <MessageStatus status={message.status} />}
+
+        <div
+          className={cn(
+            'px-3 py-2',
+            isOutbound
+              ? 'bg-bubble-outbound text-bubble-outbound-text rounded-2xl rounded-br-sm'
+              : 'bg-bubble-inbound text-bubble-inbound-text rounded-2xl rounded-bl-sm shadow-bubble'
+          )}
+        >
+          {renderContent()}
+          <div className={cn('flex items-center justify-end gap-1 mt-0.5', isOutbound ? 'text-white/70' : 'text-muted-foreground')}>
+            <span className="text-[11px]">{time}</span>
+            {isOutbound && <MessageStatus status={message.status} />}
+          </div>
         </div>
       </div>
     </div>

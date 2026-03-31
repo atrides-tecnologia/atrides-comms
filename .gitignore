@@ -54,10 +54,13 @@ prisma/*.db-journal
 # prints
 prints/
 README-workflow.md
+docs/references/
 
 # claude code
 .claude/
 .mcp.json
+.agents/
+skills-lock.json
 
 # playwright mcp
 .playwright-mcp/

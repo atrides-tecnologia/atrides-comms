@@ -1,50 +1,93 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
 @import "tailwindcss";
 
 @custom-variant dark (&:is(.dark *));
 
 @theme {
+  /* Colors — Light */
   --color-background: #ffffff;
-  --color-foreground: #1a1d21;
-  --color-muted: #f7f8fa;
-  --color-muted-foreground: #616774;
-  --color-border: #e1e4e8;
-  --color-accent: #0066ff;
+  --color-foreground: #111318;
+  --color-muted: #f4f5f7;
+  --color-muted-foreground: #5f6672;
+  --color-border: #e8eaed;
+  --color-accent: #0d9488;
   --color-accent-foreground: #ffffff;
-  --color-destructive: #ff3b30;
-  --color-success: #34c759;
-  --color-hover: #f0f2f5;
-  --color-bubble-outbound: #0066ff;
+  --color-destructive: #ef4444;
+  --color-success: #22c55e;
+  --color-hover: rgba(0, 0, 0, 0.04);
+  --color-bubble-outbound: #1e293b;
   --color-bubble-outbound-text: #ffffff;
-  --color-bubble-inbound: #f0f2f5;
-  --color-bubble-inbound-text: #1a1d21;
-  --color-sidebar: #f7f8fa;
-  --color-panel: #f7f8fa;
-  --color-unread: #ff3b30;
+  --color-bubble-inbound: #ffffff;
+  --color-bubble-inbound-text: #111318;
+  --color-sidebar: #f8f9fb;
+  --color-panel: #ffffff;
+  --color-unread: #0d9488;
   --color-input: #ffffff;
-  --color-ring: #0066ff;
+  --color-ring: #0d9488;
+  --color-canvas: #eef0f3;
+  --color-icon-sidebar: #1a1d24;
+  --color-chat-bg: #f6f7f9;
 
-  --font-heading: 'DM Sans', sans-serif;
-  --font-body: 'IBM Plex Sans', sans-serif;
+  /* Fonts */
+  --font-heading: var(--font-dm-sans), 'DM Sans', sans-serif;
+  --font-body: var(--font-ibm-plex-sans), 'IBM Plex Sans', sans-serif;
+
+  /* Easing — Emil Kowalski's custom curves */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+
+  /* Duration tokens */
+  --duration-fast: 100ms;
+  --duration-normal: 160ms;
+  --duration-medium: 200ms;
+  --duration-slow: 300ms;
+
+  /* Shadows */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+  --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06);
+  --shadow-glow: 0 0 0 3px rgba(13, 148, 136, 0.15);
+  --shadow-bubble: 0 1px 3px rgba(0, 0, 0, 0.06);
+
+  /* Radii */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --radius-full: 9999px;
 }
 
 .dark {
-  --color-background: #1a1d21;
-  --color-foreground: #e8eaed;
-  --color-muted: #1e2126;
-  --color-muted-foreground: #8b8f96;
-  --color-border: #2d3139;
-  --color-accent: #4d94ff;
+  --color-background: #12141a;
+  --color-foreground: #e4e6eb;
+  --color-muted: #1a1d24;
+  --color-muted-foreground: #8b8f9a;
+  --color-border: #262a33;
+  --color-accent: #14b8a6;
   --color-accent-foreground: #ffffff;
-  --color-hover: #2d3139;
-  --color-bubble-outbound: #4d94ff;
+  --color-hover: rgba(255, 255, 255, 0.06);
+  --color-bubble-outbound: #14b8a6;
   --color-bubble-outbound-text: #ffffff;
-  --color-bubble-inbound: #2d3139;
-  --color-bubble-inbound-text: #e8eaed;
-  --color-sidebar: #121417;
-  --color-panel: #1e2126;
-  --color-input: #1e2126;
-  --color-ring: #4d94ff;
+  --color-bubble-inbound: #1e222a;
+  --color-bubble-inbound-text: #e4e6eb;
+  --color-sidebar: #0e1016;
+  --color-panel: #15171e;
+  --color-unread: #14b8a6;
+  --color-input: #1a1d24;
+  --color-ring: #14b8a6;
+  --color-canvas: #0a0c10;
+  --color-icon-sidebar: #0e1016;
+  --color-chat-bg: #12141a;
+
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-glow: 0 0 0 3px rgba(20, 184, 166, 0.2);
+  --shadow-bubble: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 * {
@@ -54,19 +97,50 @@
 
 body {
   font-family: var(--font-body);
-  background-color: var(--color-background);
+  background-color: var(--color-canvas);
   color: var(--color-foreground);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-heading);
 }
 
+/* Button tactile feedback — Emil principle */
+button:not(:disabled):active {
+  transform: scale(0.97);
+}
+
+/* Global transition base */
+button, a, input, textarea, select {
+  transition-property: transform, background-color, border-color, color, box-shadow, opacity;
+  transition-duration: var(--duration-normal);
+  transition-timing-function: var(--ease-out);
+}
+
+/* Message enter animation */
 .message-enter {
-  animation: messageIn 200ms ease-out;
+  animation: messageIn var(--duration-medium) var(--ease-out);
 }
 
 @keyframes messageIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Stagger animation for list items */
+.stagger-enter {
+  animation: staggerIn var(--duration-slow) var(--ease-out) both;
+}
+
+@keyframes staggerIn {
   from {
     opacity: 0;
     transform: translateY(8px);
@@ -74,5 +148,23 @@ h1, h2, h3, h4, h5, h6 {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+/* Focus glow for inputs */
+input:focus, textarea:focus, select:focus {
+  box-shadow: var(--shadow-glow);
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  button:not(:disabled):active {
+    transform: none;
   }
 }
