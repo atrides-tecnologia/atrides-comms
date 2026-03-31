@@ -14,7 +14,7 @@ function formatDateLabel(date: Date): string {
 export function DateSeparator({ date }: DateSeparatorProps) {
   return (
     <div className="flex items-center justify-center py-3">
-      <span className="rounded-lg bg-muted px-3 py-1 text-[11px] font-medium text-muted-foreground">
+      <span className="rounded-full bg-background px-3 py-1 text-[11px] font-medium text-muted-foreground shadow-xs">
         {formatDateLabel(date)}
       </span>
     </div>

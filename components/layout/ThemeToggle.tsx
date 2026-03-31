@@ -3,7 +3,11 @@
 import { useTheme } from 'next-themes'
 import { useEffect, useState } from 'react'
 import { Moon, Sun } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme()
@@ -11,16 +15,42 @@ export function ThemeToggle() {
 
   useEffect(() => setMounted(true), [])
 
-  if (!mounted) return <Button variant="ghost" size="icon" className="h-8 w-8" disabled />
+  if (!mounted) {
+    return <div className="h-10 w-10" />
+  }
+
+  const isDark = theme === 'dark'
 
   return (
-    <Button
-      variant="ghost"
-      size="icon"
-      className="h-8 w-8"
-      onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-    >
-      {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-    </Button>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <button
+          onClick={() => setTheme(isDark ? 'light' : 'dark')}
+          className="flex h-10 w-10 items-center justify-center rounded-xl text-white/60 hover:text-white hover:bg-white/10 relative overflow-hidden"
+        >
+          <Sun
+            className="h-5 w-5 absolute"
+            style={{
+              transform: isDark ? 'rotate(0deg) scale(1)' : 'rotate(90deg) scale(0)',
+              opacity: isDark ? 1 : 0,
+              transitionProperty: 'transform, opacity',
+              transitionDuration: 'var(--duration-medium)',
+              transitionTimingFunction: 'var(--ease-out)',
+            }}
+          />
+          <Moon
+            className="h-5 w-5 absolute"
+            style={{
+              transform: isDark ? 'rotate(-90deg) scale(0)' : 'rotate(0deg) scale(1)',
+              opacity: isDark ? 0 : 1,
+              transitionProperty: 'transform, opacity',
+              transitionDuration: 'var(--duration-medium)',
+              transitionTimingFunction: 'var(--ease-out)',
+            }}
+          />
+        </button>
+      </TooltipTrigger>
+      <TooltipContent side="right">{isDark ? 'Modo claro' : 'Modo escuro'}</TooltipContent>
+    </Tooltip>
   )
 }

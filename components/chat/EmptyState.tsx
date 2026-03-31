@@ -35,11 +35,13 @@ export function EmptyState({ variant }: EmptyStateProps) {
 
   return (
     <div className="flex h-full flex-col items-center justify-center text-muted-foreground">
-      <Icon className="h-16 w-16 mb-4 opacity-30" />
-      <p className="text-lg font-medium font-[family-name:var(--font-heading)]">
+      <div className="stagger-enter" style={{ animationDelay: '0ms' }}>
+        <Icon className="h-16 w-16 mb-4 opacity-30 mx-auto" />
+      </div>
+      <p className="text-lg font-medium font-[family-name:var(--font-heading)] stagger-enter" style={{ animationDelay: '60ms' }}>
         {state.title}
       </p>
-      <p className="text-sm mt-1 text-center max-w-xs">
+      <p className="text-sm mt-1 text-center max-w-xs stagger-enter" style={{ animationDelay: '120ms' }}>
         {state.description}
       </p>
     </div>

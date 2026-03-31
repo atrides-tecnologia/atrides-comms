@@ -5,6 +5,7 @@ import { Archive, Phone as PhoneIcon, Loader2, ArrowLeft } from 'lucide-react'
 import { isSameDay } from 'date-fns'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { MessageBubble } from './MessageBubble'
 import { MessageInput } from './MessageInput'
 import { DateSeparator } from './DateSeparator'
@@ -12,14 +13,13 @@ import { EmptyState } from './EmptyState'
 import { MessagesSkeleton } from './MessagesSkeleton'
 import { useChatStore } from '@/stores/chatStore'
 import { useUIStore } from '@/stores/uiStore'
-import { formatPhoneNumber } from '@/lib/utils'
+import { formatPhoneNumber, getInitials, stringToColor } from '@/lib/utils'
 
 export function ChatPanel() {
   const selectedConversationId = useChatStore((s) => s.selectedConversationId)
   const conversations = useChatStore((s) => s.conversations)
   const messages = useChatStore((s) => s.messages)
   const loadingMessages = useChatStore((s) => s.loadingMessages)
-  const updateConversation = useChatStore((s) => s.updateConversation)
   const removeConversation = useChatStore((s) => s.removeConversation)
   const setMobileView = useUIStore((s) => s.setMobileView)
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -32,7 +32,6 @@ export function ChatPanel() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages.length])
 
-  // Clear send error after 5 seconds
   useEffect(() => {
     if (!sendError) return
     const timer = setTimeout(() => setSendError(null), 5000)
@@ -55,7 +54,7 @@ export function ChatPanel() {
         setSendError(err.error || 'Falha ao enviar mensagem')
       }
     } catch {
-      setSendError('Erro de conexao. Verifique sua internet.')
+      setSendError('Erro de conexão. Verifique sua internet.')
     }
   }, [selectedConversationId])
 
@@ -71,12 +70,10 @@ export function ChatPanel() {
       })
 
       if (res.ok) {
-        // If current filter is 'all', the archived conversation should disappear
-        // Remove it from the list and deselect
         removeConversation(selectedConversationId)
       }
     } catch {
-      // Silently fail — the conversation remains in the list
+      // Silently fail
     } finally {
       setArchiving(false)
     }
@@ -101,19 +98,20 @@ export function ChatPanel() {
 
   if (!selectedConversationId || !conversation) {
     return (
-      <div className="flex-1">
+      <div className="flex-1 bg-chat-bg">
         <EmptyState variant="no-conversation-selected" />
       </div>
     )
   }
 
   const displayName = conversation.contactName || formatPhoneNumber(conversation.contactPhone)
+  const avatarColor = stringToColor(conversation.contactPhone)
+  const initials = conversation.contactName ? getInitials(conversation.contactName) : '#'
 
   return (
-    <div className="flex flex-1 flex-col">
-      {/* Chat Header */}
-      <div className="flex h-14 items-center justify-between border-b border-border px-4">
-        <div className="flex items-center gap-2">
+    <div className="flex flex-1 flex-col bg-chat-bg">
+      <div className="flex h-14 items-center justify-between border-b border-border px-4 bg-background">
+        <div className="flex items-center gap-3">
           <Button
             variant="ghost"
             size="icon"
@@ -122,6 +120,11 @@ export function ChatPanel() {
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
+          <Avatar className="h-9 w-9">
+            <AvatarFallback style={{ backgroundColor: avatarColor, color: 'white' }} className="text-xs font-medium">
+              {initials}
+            </AvatarFallback>
+          </Avatar>
           <div>
             <h2 className="text-sm font-semibold font-[family-name:var(--font-heading)]">{displayName}</h2>
             <p className="text-[11px] text-muted-foreground flex items-center gap-1">
@@ -146,7 +149,6 @@ export function ChatPanel() {
         </Button>
       </div>
 
-      {/* Messages Area */}
       <ScrollArea className="flex-1">
         <div className="px-4 py-2">
           {loadingMessages ? (
@@ -164,6 +166,8 @@ export function ChatPanel() {
                         key={msg.id}
                         message={msg}
                         isSameSenderAsPrevious={isSameSender}
+                        contactName={conversation.contactName || undefined}
+                        contactPhone={conversation.contactPhone}
                       />
                     )
                   })}
@@ -175,14 +179,12 @@ export function ChatPanel() {
         </div>
       </ScrollArea>
 
-      {/* Send Error */}
       {sendError && (
         <div className="px-4 py-2 bg-destructive/10 border-t border-destructive/20">
           <p className="text-xs text-destructive">{sendError}</p>
         </div>
       )}
 
-      {/* Input */}
       <MessageInput onSend={handleSend} />
     </div>
   )

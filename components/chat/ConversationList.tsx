@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { Search, MessageSquare } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -13,7 +13,7 @@ import { cn } from '@/lib/utils'
 
 const TABS = [
   { key: 'all' as const, label: 'Todas' },
-  { key: 'unread' as const, label: 'Nao lidas' },
+  { key: 'unread' as const, label: 'Não lidas' },
   { key: 'archived' as const, label: 'Arquivadas' },
 ]
 
@@ -27,6 +27,25 @@ export function ConversationList() {
   const filter = useUIStore((s) => s.conversationFilter)
   const setFilter = useUIStore((s) => s.setConversationFilter)
   const setMobileView = useUIStore((s) => s.setMobileView)
+
+  // Sliding pill indicator
+  const tabsRef = useRef<HTMLDivElement>(null)
+  const [pillStyle, setPillStyle] = useState({ left: 0, width: 0 })
+
+  const updatePill = useCallback(() => {
+    if (!tabsRef.current) return
+    const activeTab = tabsRef.current.querySelector('[data-active="true"]') as HTMLElement
+    if (activeTab) {
+      setPillStyle({
+        left: activeTab.offsetLeft,
+        width: activeTab.offsetWidth,
+      })
+    }
+  }, [])
+
+  useEffect(() => {
+    updatePill()
+  }, [filter, updatePill])
 
   const handleSelectConversation = (id: string) => {
     selectConversation(id)
@@ -78,13 +97,18 @@ export function ConversationList() {
       )
     }
 
-    return filtered.map((conv) => (
-      <ConversationItem
+    return filtered.map((conv, index) => (
+      <div
         key={conv.id}
-        conversation={conv}
-        isActive={selectedConversationId === conv.id}
-        onClick={() => handleSelectConversation(conv.id)}
-      />
+        className="stagger-enter"
+        style={{ animationDelay: `${index * 40}ms` }}
+      >
+        <ConversationItem
+          conversation={conv}
+          isActive={selectedConversationId === conv.id}
+          onClick={() => handleSelectConversation(conv.id)}
+        />
+      </div>
     ))
   }
 
@@ -101,16 +125,26 @@ export function ConversationList() {
           />
         </div>
 
-        <div className="flex gap-1">
+        <div ref={tabsRef} className="relative flex gap-0.5 rounded-[--radius-md] bg-muted p-0.5">
+          <div
+            className="absolute top-0.5 h-[calc(100%-4px)] rounded-[--radius-sm] bg-accent transition-all"
+            style={{
+              left: pillStyle.left,
+              width: pillStyle.width,
+              transitionDuration: 'var(--duration-medium)',
+              transitionTimingFunction: 'var(--ease-out)',
+            }}
+          />
           {TABS.map((tab) => (
             <button
               key={tab.key}
+              data-active={filter === tab.key}
               onClick={() => setFilter(tab.key)}
               className={cn(
-                'px-2.5 py-1 rounded-md text-xs font-medium transition-colors',
+                'relative z-10 px-2.5 py-1 rounded-[--radius-sm] text-xs font-medium',
                 filter === tab.key
-                  ? 'bg-accent text-accent-foreground'
-                  : 'text-muted-foreground hover:bg-hover'
+                  ? 'text-accent-foreground'
+                  : 'text-muted-foreground hover:text-foreground'
               )}
             >
               {tab.label}
