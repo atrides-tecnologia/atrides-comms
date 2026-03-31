@@ -65,9 +65,11 @@ export default function SettingsPage() {
     setTimeout(() => setCopiedToken(null), 2000)
   }
 
-  const webhookUrl = typeof window !== 'undefined'
-    ? `${window.location.origin}/api/webhook`
-    : '/api/webhook'
+  const [webhookUrl, setWebhookUrl] = useState('/api/webhook')
+
+  useEffect(() => {
+    setWebhookUrl(`${window.location.origin}/api/webhook`)
+  }, [])
 
   return (
     <TooltipProvider delayDuration={200}>
