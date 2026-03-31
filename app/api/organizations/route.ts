@@ -32,7 +32,6 @@ export async function GET() {
         phoneNumber: phone.phoneNumber,
         phoneNumberId: phone.phoneNumberId,
         wabaId: phone.wabaId,
-        accessToken: phone.accessToken,
         webhookVerifyToken: phone.webhookVerifyToken,
         isActive: phone.isActive,
         createdAt: phone.createdAt,

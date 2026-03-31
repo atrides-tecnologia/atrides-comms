@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
 import { ThemeToggle } from '@/components/layout/ThemeToggle'
+import { TooltipProvider } from '@/components/ui/tooltip'
 import type { Organization, PhoneNumber } from '@/types'
 
 export default function SettingsPage() {
@@ -65,6 +66,7 @@ export default function SettingsPage() {
     : '/api/webhook'
 
   return (
+    <TooltipProvider delayDuration={200}>
     <div className="min-h-screen bg-background">
       <header className="flex h-14 items-center gap-3 border-b border-border px-6">
         <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
@@ -133,7 +135,7 @@ export default function SettingsPage() {
                             <span className="text-[10px] text-muted-foreground">Verify Token:</span>
                             <code className="text-[10px] bg-muted px-1.5 py-0.5 rounded">{phone.webhookVerifyToken}</code>
                             <button
-                              onClick={() => copyToClipboard(phone.webhookVerifyToken, phone.id)}
+                              onClick={() => copyToClipboard(phone.webhookVerifyToken || '', phone.id)}
                               className="text-muted-foreground hover:text-foreground"
                             >
                               {copiedToken === phone.id ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
@@ -186,5 +188,6 @@ export default function SettingsPage() {
         </section>
       </div>
     </div>
+    </TooltipProvider>
   )
 }
