@@ -15,11 +15,10 @@ export interface PhoneNumber {
   phoneNumber: string
   phoneNumberId: string
   wabaId: string
-  accessToken: string
-  webhookVerifyToken: string
   isActive: boolean
   createdAt: string
   updatedAt: string
+  webhookVerifyToken?: string
 }
 
 export interface PhoneNumberWithUnread extends PhoneNumber {

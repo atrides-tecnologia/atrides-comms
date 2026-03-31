@@ -133,7 +133,7 @@ export default function SettingsPage() {
                             <span className="text-[10px] text-muted-foreground">Verify Token:</span>
                             <code className="text-[10px] bg-muted px-1.5 py-0.5 rounded">{phone.webhookVerifyToken}</code>
                             <button
-                              onClick={() => copyToClipboard(phone.webhookVerifyToken, phone.id)}
+                              onClick={() => copyToClipboard(phone.webhookVerifyToken || '', phone.id)}
                               className="text-muted-foreground hover:text-foreground"
                             >
                               {copiedToken === phone.id ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}

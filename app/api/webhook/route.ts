@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { Prisma } from '@prisma/client'
+import crypto from 'crypto'
 import { prisma } from '@/lib/prisma'
 import { extractMessagesFromPayload, extractStatusesFromPayload } from '@/lib/whatsapp/webhook'
 import type { WebhookPayload } from '@/lib/whatsapp/types'
@@ -29,7 +30,23 @@ export async function GET(request: NextRequest) {
 
 // POST — Receive webhook notifications from Meta
 export async function POST(request: NextRequest) {
-  const body = (await request.json()) as WebhookPayload
+  const appSecret = process.env.META_APP_SECRET
+  const rawBody = await request.text()
+
+  if (appSecret) {
+    const signature = request.headers.get('x-hub-signature-256')
+    if (!signature) {
+      return new NextResponse('Missing signature', { status: 401 })
+    }
+
+    const expectedSignature = 'sha256=' + crypto.createHmac('sha256', appSecret).update(rawBody).digest('hex')
+
+    if (!crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSignature))) {
+      return new NextResponse('Invalid signature', { status: 401 })
+    }
+  }
+
+  const body = JSON.parse(rawBody) as WebhookPayload
 
   if (body.object !== 'whatsapp_business_account') {
     return NextResponse.json({ error: 'Invalid object' }, { status: 400 })

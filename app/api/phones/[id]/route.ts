@@ -19,7 +19,8 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       },
     })
 
-    return NextResponse.json(phone)
+    const { accessToken: _, webhookVerifyToken: __, ...safePhone } = phone
+    return NextResponse.json(safePhone)
   } catch (error) {
     console.error('Update phone error:', error)
     return NextResponse.json({ error: 'Failed to update phone number' }, { status: 500 })

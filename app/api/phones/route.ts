@@ -8,6 +8,17 @@ export async function GET(request: NextRequest) {
     const phones = await prisma.phoneNumber.findMany({
       where: orgId ? { organizationId: orgId } : undefined,
       orderBy: { label: 'asc' },
+      select: {
+        id: true,
+        organizationId: true,
+        label: true,
+        phoneNumber: true,
+        phoneNumberId: true,
+        wabaId: true,
+        isActive: true,
+        createdAt: true,
+        updatedAt: true,
+      },
     })
 
     return NextResponse.json(phones)
@@ -40,7 +51,8 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    return NextResponse.json(phone, { status: 201 })
+    const { accessToken: _, webhookVerifyToken: __, ...safePhone } = phone
+    return NextResponse.json(safePhone, { status: 201 })
   } catch (error) {
     console.error('Create phone error:', error)
     return NextResponse.json({ error: 'Failed to create phone number' }, { status: 500 })
