@@ -58,6 +58,8 @@ README-workflow.md
 # claude code
 .claude/
 .mcp.json
+.agents/
+skills-lock.json
 
 # playwright mcp
 .playwright-mcp/
