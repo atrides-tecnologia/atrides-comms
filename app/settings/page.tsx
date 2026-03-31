@@ -6,12 +6,16 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
 import { ThemeToggle } from '@/components/layout/ThemeToggle'
+import { InlineEdit } from '@/components/ui/inline-edit'
 import { TooltipProvider } from '@/components/ui/tooltip'
+import { useChatStore } from '@/stores/chatStore'
 import type { Organization, PhoneNumber } from '@/types'
 
 export default function SettingsPage() {
   const [organizations, setOrganizations] = useState<(Organization & { phoneNumbers: PhoneNumber[] })[]>([])
   const [copiedToken, setCopiedToken] = useState<string | null>(null)
+  const updateOrganization = useChatStore((s) => s.updateOrganization)
+  const updatePhoneNumber = useChatStore((s) => s.updatePhoneNumber)
 
   useEffect(() => {
     fetch('/api/organizations')
@@ -112,7 +116,21 @@ export default function SettingsPage() {
                 <div className="flex items-center justify-between p-4">
                   <div className="flex items-center gap-2">
                     <span className="h-3 w-3 rounded-full" style={{ backgroundColor: org.color }} />
-                    <span className="font-medium text-sm">{org.name}</span>
+                    <InlineEdit
+                      value={org.name}
+                      onSave={async (name) => {
+                        const res = await fetch(`/api/organizations/${org.id}`, {
+                          method: 'PUT',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ name }),
+                        })
+                        if (!res.ok) throw new Error('Failed to update')
+                        updateOrganization(org.id, { name })
+                        setOrganizations((prev) =>
+                          prev.map((o) => (o.id === org.id ? { ...o, name } : o))
+                        )
+                      }}
+                    />
                   </div>
                   <Button
                     variant="ghost"
@@ -129,7 +147,24 @@ export default function SettingsPage() {
                     {(org.phoneNumbers || []).map((phone: PhoneNumber) => (
                       <div key={phone.id} className="flex items-center justify-between px-4 py-3 border-b border-border last:border-b-0">
                         <div>
-                          <p className="text-sm font-medium">{phone.label}</p>
+                          <InlineEdit
+                            value={phone.label}
+                            onSave={async (label) => {
+                              const res = await fetch(`/api/phones/${phone.id}`, {
+                                method: 'PUT',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ label }),
+                              })
+                              if (!res.ok) throw new Error('Failed to update')
+                              setOrganizations((prev) =>
+                                prev.map((o) =>
+                                  o.id === org.id
+                                    ? { ...o, phoneNumbers: (o.phoneNumbers || []).map((p) => p.id === phone.id ? { ...p, label } : p) }
+                                    : o
+                                )
+                              )
+                            }}
+                          />
                           <p className="text-xs text-muted-foreground">{phone.phoneNumber}</p>
                           <div className="flex items-center gap-1 mt-1">
                             <span className="text-[10px] text-muted-foreground">Verify Token:</span>

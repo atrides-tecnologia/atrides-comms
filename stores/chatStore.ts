@@ -27,6 +27,8 @@ interface ChatState {
   selectConversation: (id: string | null) => void
   addMessage: (msg: Message) => void
   updateMessage: (id: string, updates: Partial<Message>) => void
+  updateOrganization: (id: string, updates: Partial<Organization>) => void
+  updatePhoneNumber: (orgId: string, phoneId: string, updates: Partial<PhoneNumberWithUnread>) => void
   updateConversation: (id: string, updates: Partial<Conversation>) => void
   updateMessageByWamid: (wamid: string, updates: Partial<Message>) => void
   removeConversation: (id: string) => void
@@ -65,6 +67,20 @@ export const useChatStore = create<ChatState>((set) => ({
   updateMessageByWamid: (wamid, updates) =>
     set((state) => ({
       messages: state.messages.map((m) => (m.wamid === wamid ? { ...m, ...updates } : m)),
+    })),
+
+  updateOrganization: (id, updates) =>
+    set((state) => ({
+      organizations: state.organizations.map((o) => (o.id === id ? { ...o, ...updates } : o)),
+    })),
+
+  updatePhoneNumber: (orgId, phoneId, updates) =>
+    set((state) => ({
+      organizations: state.organizations.map((o) =>
+        o.id === orgId
+          ? { ...o, phoneNumbers: o.phoneNumbers?.map((p) => (p.id === phoneId ? { ...p, ...updates } : p)) }
+          : o
+      ),
     })),
 
   updateConversation: (id, updates) =>
