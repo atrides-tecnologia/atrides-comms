@@ -324,7 +324,7 @@ export default function SettingsPage() {
 
                 {/* Add Discord channel */}
                 <div className="space-y-2">
-                  <div className="flex gap-2">
+                  <div className="flex flex-col sm:flex-row gap-2">
                     <Input
                       placeholder="Label (ex: Geral)"
                       value={newDiscordLabel[org.id] || ''}
