@@ -16,7 +16,8 @@ model Organization {
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
 
-  phoneNumbers PhoneNumber[]
+  phoneNumbers          PhoneNumber[]
+  notificationChannels  NotificationChannel[]
 
   @@map("organizations")
 }
@@ -97,4 +98,20 @@ model MessageTemplate {
 
   @@unique([phoneNumberId, templateName, language])
   @@map("message_templates")
+}
+
+model NotificationChannel {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  type           String   // "discord" | "email"
+  label          String
+  config         Json     // { webhookUrl } for discord, { to, from } for email
+  isActive       Boolean  @default(true) @map("is_active")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId], map: "idx_notification_channels_org")
+  @@map("notification_channels")
 }

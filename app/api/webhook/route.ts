@@ -3,6 +3,7 @@ import { Prisma } from '@prisma/client'
 import crypto from 'crypto'
 import { prisma } from '@/lib/prisma'
 import { extractMessagesFromPayload, extractStatusesFromPayload } from '@/lib/whatsapp/webhook'
+import { dispatchNotifications } from '@/lib/notifications/dispatcher'
 import type { WebhookPayload } from '@/lib/whatsapp/types'
 
 // GET — Webhook verification from Meta
@@ -66,9 +67,10 @@ export async function POST(request: NextRequest) {
         const value = change.value
         const metaPhoneNumberId = value.metadata.phone_number_id
 
-        // Find our phone number record
+        // Find our phone number record with org info for notifications
         const phoneNumber = await prisma.phoneNumber.findFirst({
           where: { phoneNumberId: metaPhoneNumberId, isActive: true },
+          include: { organization: { select: { id: true, name: true } } },
         })
 
         if (!phoneNumber) continue
@@ -112,6 +114,16 @@ export async function POST(request: NextRequest) {
               timestamp: msg.timestamp,
             },
           })
+
+          // Fire-and-forget notifications — don't block webhook response
+          dispatchNotifications(phoneNumber.organization.id, {
+            orgName: phoneNumber.organization.name,
+            phoneLabel: phoneNumber.label,
+            contactName: msg.contactName,
+            contactPhone: msg.from,
+            messageText: msg.content.text || `[${msg.type}]`,
+            timestamp: new Date(msg.timestamp),
+          }).catch((err) => console.error('[notifications] Dispatch error:', err))
         }
 
         // Process status updates

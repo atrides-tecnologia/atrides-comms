@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { ArrowLeft, Trash2, Plus, RefreshCw, Copy, Check } from 'lucide-react'
+import { ArrowLeft, Trash2, Plus, RefreshCw, Copy, Check, Bell, BellOff } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
@@ -9,11 +9,14 @@ import { ThemeToggle } from '@/components/layout/ThemeToggle'
 import { InlineEdit } from '@/components/ui/inline-edit'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { useChatStore } from '@/stores/chatStore'
-import type { Organization, PhoneNumber } from '@/types'
+import type { Organization, PhoneNumber, NotificationChannel } from '@/types'
 
 export default function SettingsPage() {
   const [organizations, setOrganizations] = useState<(Organization & { phoneNumbers: PhoneNumber[] })[]>([])
   const [copiedToken, setCopiedToken] = useState<string | null>(null)
+  const [channels, setChannels] = useState<Record<string, NotificationChannel[]>>({})
+  const [newDiscordUrl, setNewDiscordUrl] = useState<Record<string, string>>({})
+  const [newDiscordLabel, setNewDiscordLabel] = useState<Record<string, string>>({})
   const updateOrganization = useChatStore((s) => s.updateOrganization)
   const updatePhoneNumber = useChatStore((s) => s.updatePhoneNumber)
 
@@ -23,6 +26,67 @@ export default function SettingsPage() {
       .then(setOrganizations)
       .catch(console.error)
   }, [])
+
+  // Load notification channels for all orgs
+  useEffect(() => {
+    organizations.forEach((org) => {
+      fetch(`/api/notifications?organizationId=${org.id}`)
+        .then((r) => r.json())
+        .then((data) => setChannels((prev) => ({ ...prev, [org.id]: data })))
+        .catch(console.error)
+    })
+  }, [organizations.length]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleAddDiscord = async (orgId: string) => {
+    const url = newDiscordUrl[orgId]?.trim()
+    const label = newDiscordLabel[orgId]?.trim() || 'Discord'
+    if (!url) return
+
+    const res = await fetch('/api/notifications', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        organizationId: orgId,
+        type: 'discord',
+        label,
+        config: { webhookUrl: url },
+      }),
+    })
+
+    if (res.ok) {
+      const channel = await res.json()
+      setChannels((prev) => ({ ...prev, [orgId]: [...(prev[orgId] || []), channel] }))
+      setNewDiscordUrl((prev) => ({ ...prev, [orgId]: '' }))
+      setNewDiscordLabel((prev) => ({ ...prev, [orgId]: '' }))
+    }
+  }
+
+  const handleToggleChannel = async (orgId: string, channelId: string, isActive: boolean) => {
+    const res = await fetch(`/api/notifications/${channelId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ isActive: !isActive }),
+    })
+
+    if (res.ok) {
+      setChannels((prev) => ({
+        ...prev,
+        [orgId]: (prev[orgId] || []).map((c) => c.id === channelId ? { ...c, isActive: !isActive } : c),
+      }))
+    }
+  }
+
+  const handleDeleteChannel = async (orgId: string, channelId: string) => {
+    if (!confirm('Remover este canal de notificação?')) return
+    const res = await fetch(`/api/notifications/${channelId}`, { method: 'DELETE' })
+
+    if (res.ok) {
+      setChannels((prev) => ({
+        ...prev,
+        [orgId]: (prev[orgId] || []).filter((c) => c.id !== channelId),
+      }))
+    }
+  }
 
   const handleDeleteOrg = async (id: string) => {
     if (!confirm('Tem certeza? Isso excluirá todos os números e conversas deste projeto.')) return
@@ -210,6 +274,82 @@ export default function SettingsPage() {
                 Nenhum projeto criado ainda
               </p>
             )}
+          </div>
+        </section>
+
+        <Separator />
+
+        {/* Notifications */}
+        <section>
+          <h2 className="text-base font-semibold font-[family-name:var(--font-heading)] mb-3">Notificações</h2>
+          <p className="text-xs text-muted-foreground mb-3">
+            Receba notificações quando mensagens chegarem no WhatsApp.
+          </p>
+          <div className="space-y-4">
+            {organizations.map((org) => (
+              <div key={org.id} className="rounded-lg border border-border p-4 space-y-3">
+                <div className="flex items-center gap-2">
+                  <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: org.color }} />
+                  <span className="text-sm font-medium">{org.name}</span>
+                </div>
+
+                {/* Existing channels */}
+                {(channels[org.id] || []).map((channel) => (
+                  <div key={channel.id} className="flex items-center justify-between rounded-md bg-muted/50 px-3 py-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-medium">{channel.label}</span>
+                      <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">{channel.type}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-muted-foreground"
+                        onClick={() => handleToggleChannel(org.id, channel.id, channel.isActive)}
+                        title={channel.isActive ? 'Desativar' : 'Ativar'}
+                      >
+                        {channel.isActive ? <Bell className="h-3.5 w-3.5" /> : <BellOff className="h-3.5 w-3.5" />}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                        onClick={() => handleDeleteChannel(org.id, channel.id)}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+
+                {/* Add Discord channel */}
+                <div className="space-y-2">
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Label (ex: Geral)"
+                      value={newDiscordLabel[org.id] || ''}
+                      onChange={(e) => setNewDiscordLabel((prev) => ({ ...prev, [org.id]: e.target.value }))}
+                      className="h-8 text-xs flex-[1]"
+                    />
+                    <Input
+                      placeholder="Discord Webhook URL"
+                      value={newDiscordUrl[org.id] || ''}
+                      onChange={(e) => setNewDiscordUrl((prev) => ({ ...prev, [org.id]: e.target.value }))}
+                      className="h-8 text-xs flex-[2]"
+                    />
+                    <Button
+                      size="sm"
+                      className="h-8 text-xs"
+                      onClick={() => handleAddDiscord(org.id)}
+                      disabled={!newDiscordUrl[org.id]?.trim()}
+                    >
+                      <Plus className="h-3.5 w-3.5 mr-1" />
+                      Discord
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </section>
 
