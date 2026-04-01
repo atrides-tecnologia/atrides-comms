@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { Prisma } from '@prisma/client'
 import crypto from 'crypto'
+import { after } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { extractMessagesFromPayload, extractStatusesFromPayload } from '@/lib/whatsapp/webhook'
 import { dispatchNotifications } from '@/lib/notifications/dispatcher'
@@ -115,15 +116,17 @@ export async function POST(request: NextRequest) {
             },
           })
 
-          // Fire-and-forget notifications — don't block webhook response
-          dispatchNotifications(phoneNumber.organization.id, {
-            orgName: phoneNumber.organization.name,
-            phoneLabel: phoneNumber.label,
-            contactName: msg.contactName,
-            contactPhone: msg.from,
-            messageText: msg.content.text || `[${msg.type}]`,
-            timestamp: new Date(msg.timestamp),
-          }).catch((err) => console.error('[notifications] Dispatch error:', err))
+          // Send notifications after response — keeps function alive on Vercel
+          after(
+            dispatchNotifications(phoneNumber.organization.id, {
+              orgName: phoneNumber.organization.name,
+              phoneLabel: phoneNumber.label,
+              contactName: msg.contactName,
+              contactPhone: msg.from,
+              messageText: msg.content.text || `[${msg.type}]`,
+              timestamp: new Date(msg.timestamp),
+            }).catch((err) => console.error('[notifications] Dispatch error:', err))
+          )
         }
 
         // Process status updates
