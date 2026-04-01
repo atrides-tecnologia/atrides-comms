@@ -76,3 +76,27 @@ export interface MessageTemplate {
   components: unknown
   syncedAt: string
 }
+
+export type NotificationChannelType = 'discord' | 'email'
+
+export interface DiscordChannelConfig {
+  webhookUrl: string
+}
+
+export interface EmailChannelConfig {
+  to: string
+  from?: string
+}
+
+export type NotificationChannelConfig = DiscordChannelConfig | EmailChannelConfig
+
+export interface NotificationChannel {
+  id: string
+  organizationId: string
+  type: NotificationChannelType
+  label: string
+  config: NotificationChannelConfig
+  isActive: boolean
+  createdAt: string
+  updatedAt: string
+}
