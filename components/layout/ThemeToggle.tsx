@@ -26,7 +26,7 @@ export function ThemeToggle() {
       <TooltipTrigger asChild>
         <button
           onClick={() => setTheme(isDark ? 'light' : 'dark')}
-          className="flex h-10 w-10 items-center justify-center rounded-xl text-white/60 hover:text-white hover:bg-white/10 relative overflow-hidden"
+          className="flex h-10 w-10 items-center justify-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted relative overflow-hidden"
         >
           <Sun
             className="h-5 w-5 absolute"
